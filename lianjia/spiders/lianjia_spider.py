@@ -41,9 +41,9 @@ class LianjiaSpider(scrapy.Spider):
             url = house.find('div', 'title')
             houseItem['hid'] = url.a['href'].split('/')[-1][:-5]
             houseItem['url'] = url.a['href']
-            
+
             houseItem['title'] = url.a.string
-            
+
             # 关注与带看
             followInfo = house.find('div', 'followInfo')
             houseItem['follow'] = followInfo.contents[0].string[0:-3]
@@ -59,7 +59,7 @@ class LianjiaSpider(scrapy.Spider):
             if len(tag_content) > 0 and tag_content[-1] == ',':
                 tag_content = tag_content[:-1]
             houseItem['tags'] = tag_content
-            
+
             # 最后一次抓取时间
             houseItem['crawl_time'] = datetime.now()
 
@@ -91,26 +91,28 @@ class LianjiaSpider(scrapy.Spider):
     def parse_detail(self, response):
         houseItem = response.meta['item']
         print("House ID: " + str(houseItem['hid']) + "\t" + str(houseItem['title']))
-        
+
         soup = BeautifulSoup(response.text, 'lxml')
 
         # 房屋总价与单价
         priceInfo = soup.find('div', 'price')
         houseItem['price'] = priceInfo.find('span', 'total').string
         houseItem['unit_price'] = priceInfo.find('span', 'unitPriceValue').get_text()[:-4]
-        
+
         # 若房屋为车位，则跳过
         if soup.find('div', 'houseInfo').find('div', 'room').find('div', 'mainInfo').string == '车位':
             return None
-        
+
         # 房屋面积，建成年份
         areaInfo = soup.find('div', 'houseInfo').find('div', 'area')
         houseItem['mianji'] = areaInfo.find('div', 'mainInfo').string[:-2] # 93.71
         niandai = areaInfo.find('div', 'subInfo').string.split('/')
         houseItem['built_year'] = niandai[0][:-2] # 2010
-        
+
         # 房屋各项信息
         info = soup.find('div', 'm-content').find('div', 'introContent').find('div', 'base').find('div', 'content').find_all('li')
+        houseItem['layer'] = '暂无数据'
+        houseItem['structure'] = '暂无数据'
         for li in info:
             if li.span.text == '房屋户型':
                 houseItem['huxing'] = li.get_text()[4:]
@@ -128,8 +130,8 @@ class LianjiaSpider(scrapy.Spider):
                 houseItem['zhuangxiu'] = li.get_text()[4:]
             elif li.span.text == '供暖方式':
                 houseItem['heating'] = li.get_text()[4:]
-        
-        
+
+
         # 房屋区域信息
         aroundInfo = soup.find('div', 'aroundInfo')
         communityName = aroundInfo.find('div', 'communityName')
@@ -137,5 +139,5 @@ class LianjiaSpider(scrapy.Spider):
         areaName = aroundInfo.find('div', 'areaName')
         region = areaName.find('span', 'info').get_text() + ' ' + areaName.find('a', 'supplement').get_text()
         houseItem['region'] = ','.join(region.split())
-        
+
         yield houseItem
