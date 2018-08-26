@@ -87,36 +87,61 @@ class MysqlTwistedPipline(object):
 
     def do_insert(self,cursor,item):
         #具体插入数据
-        insert_sql = '''
+        insert_house_sql = '''
             insert into lj_house
             ( id, 
             community, region,
             type, area, orientation, 
             decoration, layer, heating,
             floor, total_floor, built_year, structure,
-            follow, visit, tags, price, unit_price,
-            url,
+            tags, url,
             crawl_time) 
             VALUES (%s,
             %s,%s,
             %s,%s,%s,
             %s,%s,%s,
             %s,%s,%s,%s,
-            %s,%s,%s,%s,%s,
-            %s,
+            %s,%s,
             %s)
             ON DUPLICATE KEY UPDATE
             crawl_time=VALUES(crawl_time)
             '''
-        cursor.execute(insert_sql,
+        insert_price_sql = '''
+            insert into lj_house_price
+            ( id, 
+            price, unit_price,
+            crawl_time) 
+            VALUES (%s,
+            %s,%s,
+            %s)
+            '''
+        insert_follow_sql = '''
+            insert into lj_house_follow
+            ( id, 
+            follow, visit,
+            crawl_time) 
+            VALUES (%s,
+            %s,%s,
+            %s)
+            '''
+
+        cursor.execute(insert_house_sql,
                        (item['hid'], 
                         item['xiaoqu'], item['region'],
                         item['huxing'], item['mianji'], item['chaoxiang'], 
                         item['zhuangxiu'], item['layer'], item['heating'],
                         item['floor'], item['total_floor'],
                         item['built_year'], item['structure'],
-                        item['follow'], item['visit'], item['tags'],
+                        item['tags'], item['url'],
+                        item['crawl_time']
+                    ))
+        cursor.execute(insert_price_sql,
+                       (item['hid'], 
                         item['price'], item['unit_price'],
-                        item['url'],
+                        item['crawl_time']
+                    ))
+        cursor.execute(insert_follow_sql,
+                       (item['hid'], 
+                        item['follow'], item['visit'],
                         item['crawl_time']
                     ))
