@@ -18,7 +18,12 @@ class JsonWithEncodingPipeline(object):
         self.file = codecs.open("lianjia.json",'w',encoding="utf-8")
 
     def process_item(self, item, spider):
-        
+
+        if hasattr(item,'layer') is False:
+            item['layer'] = '暂无数据'
+        if hasattr(item,'structure') is False:
+            item['structure'] = '暂无数据'
+
         url = json.dumps(str(item['url']),ensure_ascii=False) + "\n"
         xiaoqu = json.dumps("小区：" + str(item['xiaoqu']),ensure_ascii=False) + "\n"
         huxing = json.dumps("户型：" + str(item['huxing']),ensure_ascii=False) + "\n"
@@ -72,6 +77,12 @@ class MysqlTwistedPipline(object):
         return cls(dbpool)
 
     def process_item(self,item,spider):
+
+        if hasattr(item,'layer') is False:
+            item['layer'] = '暂无数据'
+        if hasattr(item,'structure') is False:
+            item['structure'] = '暂无数据'
+
         '''
         使用twisted将mysql插入变成异步
         :param item:

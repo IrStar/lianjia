@@ -113,8 +113,6 @@ class LianjiaSpider(scrapy.Spider):
 
         # 房屋各项信息
         info = soup.find('div', 'm-content').find('div', 'introContent').find('div', 'base').find('div', 'content').find_all('li')
-        houseItem['layer'] = '暂无数据'
-        houseItem['structure'] = '暂无数据'
         for li in info:
             if li.span.text == '房屋户型':
                 houseItem['huxing'] = li.get_text()[4:]
