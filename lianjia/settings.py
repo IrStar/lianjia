@@ -68,8 +68,8 @@ DOWNLOADER_MIDDLEWARES = {
 # See https://doc.scrapy.org/en/latest/topics/item-pipeline.html
 ITEM_PIPELINES = {
     'lianjia.pipelines.LianjiaPipeline' : 200,
-    'lianjia.pipelines.JsonWithEncodingPipeline': 300,
-#    'lianjia.pipelines.MysqlTwistedPipline': 200,
+#    'lianjia.pipelines.JsonWithEncodingPipeline': 300,
+    'lianjia.pipelines.MysqlTwistedPipline': 200,
 }
 
 # Enable and configure the AutoThrottle extension (disabled by default)
@@ -92,6 +92,15 @@ ITEM_PIPELINES = {
 #HTTPCACHE_DIR = 'httpcache'
 #HTTPCACHE_IGNORE_HTTP_CODES = []
 #HTTPCACHE_STORAGE = 'scrapy.extensions.httpcache.FilesystemCacheStorage'
+MYSQL_CONNECT = {
+    'host'      :   'localhost',
+    'port'      :   3306,
+    'user'      :   'dev',
+    'passwd'    :   'l0calh0st',
+    'db'        :   'lianjia',
+    'charset'   :   'utf8',
+    'use_unicode'   :   True
+}
 MYSQL_HOST      =   "localhost"
 MYSQL_PORT      =   3306
 MYSQL_USER      =   'dev'

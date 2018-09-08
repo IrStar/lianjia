@@ -11,15 +11,38 @@ from twisted.enterprise import adbapi
 
 class LianjiaPipeline(object):
 
+    @classmethod
+    def from_settings(cls,settings):
+        dbparms = settings.get("MYSQL_CONNECT")
+        dbpool = adbapi.ConnectionPool("pymysql",**dbparms)
+        return cls(dbpool)
+
+    def __init__(self,dbpool):
+        self.dbpool = dbpool
+
+    def __del__(self):
+        self.dbpool.close()
+
     def open_spider(self, spider):
 
-        spider.house_ids = ['101101493098', 
-#        '101102431983', 
-#        '101102989344',
-        '101102291309',
-        '101102977607', '101103132770', '101101596120', '101102760470', '101102881080',
-        '101102855707', 
-        '101102490792']
+        query = self.dbpool.runInteraction(self.update_house_ids, spider)
+        query.addErrback(self.handle_error)
+
+    def update_house_ids(self, cursor, spider):
+
+        exist_house_sql = '''select id from lj_house'''
+        cursor.execute(exist_house_sql)
+        result = cursor.fetchall()
+        if result:
+            # 使用house[0]取出数据，因为result的子项是tuple类型
+            spider.exist_house_ids = set([str(house[0]) for house in result])
+        else:
+            # 设置已存储的house列表
+            spider.exist_house_ids = set()
+
+    def handle_error(self,failure):
+        #处理数据库异常
+        print(failure)
 
     def process_item(self, item, spider):
 
@@ -73,30 +96,19 @@ class MysqlTwistedPipline(object):
     '''
     采用异步的方式插入数据
     '''
-    def __init__(self,dbpool):
-        self.dbpool = dbpool
-
     @classmethod
     def from_settings(cls,settings):
-        dbparms = dict(
-            host = settings["MYSQL_HOST"],
-            port = settings["MYSQL_PORT"],
-            user = settings["MYSQL_USER"],
-            passwd = settings["MYSQL_PASSWD"],
-            db = settings["MYSQL_DB"],
-            use_unicode = True,
-            charset="utf8",
-        )
+        dbparms = settings.get("MYSQL_CONNECT")
         dbpool = adbapi.ConnectionPool("pymysql",**dbparms)
         return cls(dbpool)
 
+    def __init__(self,dbpool):
+        self.dbpool = dbpool
+
+    def __del__(self):
+        self.dbpool.close()
+
     def process_item(self,item,spider):
-
-        if hasattr(item,'layer') is False:
-            item['layer'] = '暂无数据'
-        if hasattr(item,'structure') is False:
-            item['structure'] = '暂无数据'
-
         '''
         使用twisted将mysql插入变成异步
         :param item:

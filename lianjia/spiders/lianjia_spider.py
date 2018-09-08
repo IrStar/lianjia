@@ -47,7 +47,7 @@ class LianjiaSpider(scrapy.Spider):
 
             houseItem['title'] = url.a.string
 
-            if houseItem['hid'] in self.house_ids:
+            if houseItem['hid'] in self.exist_house_ids:
                 continue
 
             # 关注与带看
