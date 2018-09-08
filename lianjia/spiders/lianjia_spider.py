@@ -44,17 +44,18 @@ class LianjiaSpider(scrapy.Spider):
             url = house.find('div', 'title')
             houseItem['hid'] = url.a['href'].split('/')[-1][:-5]
             houseItem['url'] = url.a['href']
-
-            houseItem['title'] = url.a.string
-
-            if houseItem['hid'] in self.exist_house_ids:
-                continue
+            houseItem['crawl_time'] = datetime.now()
 
             # 关注与带看
             followInfo = house.find('div', 'followInfo')
             houseItem['follow'] = followInfo.contents[0].string[0:-3]
             daikan = followInfo.find('span', 'divide').next_sibling.string
             houseItem['visit'] = daikan[0:-3]
+
+            # 房屋售价
+            priceInfo = house.find('div', 'priceInfo')
+            houseItem['price'] = priceInfo.find('div','totalPrice').span.string
+            houseItem['unit_price'] = priceInfo.find('div','unitPrice').span.string[2:-4]
 
             # 房屋标签
             tags = followInfo.find('div', 'tag')
@@ -66,10 +67,13 @@ class LianjiaSpider(scrapy.Spider):
                 tag_content = tag_content[:-1]
             houseItem['tags'] = tag_content
 
-            # 最后一次抓取时间
-            houseItem['crawl_time'] = datetime.now()
+            # 若该房屋已经存在于数据库中，则无需读取房屋详情
+            if houseItem['hid'] in self.exist_house_ids:
+                yield houseItem
+                continue
 
             # 获取详细信息
+            houseItem['title'] = url.a.string
             yield scrapy.Request(url=houseItem['url'], meta={'item':houseItem}, 
                                  callback = self.parse_detail)
 
@@ -101,11 +105,6 @@ class LianjiaSpider(scrapy.Spider):
         print("House ID: " + str(houseItem['hid']) + "\t" + str(houseItem['title']))
 
         soup = BeautifulSoup(response.text, 'lxml')
-
-        # 房屋总价与单价
-        priceInfo = soup.find('div', 'price')
-        houseItem['price'] = priceInfo.find('span', 'total').string
-        houseItem['unit_price'] = priceInfo.find('span', 'unitPriceValue').get_text()[:-4]
 
         # 若房屋为车位，则跳过
         if soup.find('div', 'houseInfo').find('div', 'room').find('div', 'mainInfo').string == '车位':

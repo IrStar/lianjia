@@ -49,7 +49,7 @@ class LianjiaPipeline(object):
         if item.get('layer') is None:
             item['layer'] = '暂无数据'
         if item.get('structure') is None:
-            item['structure'] = '试试看吧'
+            item['structure'] = '暂无数据'
 
         return item
 
@@ -93,6 +93,26 @@ class JsonWithEncodingPipeline(object):
 
 
 class MysqlTwistedPipline(object):
+
+    insert_price_sql = '''
+        insert into lj_house_price
+        ( id, 
+        price, unit_price,
+        crawl_time) 
+        VALUES (%s,
+        %s,%s,
+        %s)
+    '''
+    insert_follow_sql = '''
+        insert into lj_house_follow
+        ( id, 
+        follow, visit,
+        crawl_time) 
+        VALUES (%s,
+        %s,%s,
+        %s)
+    '''
+
     '''
     采用异步的方式插入数据
     '''
@@ -115,12 +135,31 @@ class MysqlTwistedPipline(object):
         :param spider:
         :return:
         '''
-        query = self.dbpool.runInteraction(self.do_insert,item)
+        if item.get('title') is None:
+            # 该房屋已经存在，只更新关注、带看、价格
+            query = self.dbpool.runInteraction(self.do_update, item)
+        else:
+            # 更新房屋全部信息
+            query = self.dbpool.runInteraction(self.do_insert,item)
         query.addErrback(self.handle_error)
 
     def handle_error(self,failure):
         #处理异步插入的异常
         print(failure)
+
+    def do_update(self,cursor,item):
+        # 更新关注、带看
+        cursor.execute(self.insert_follow_sql,
+            (item['hid'], 
+                item['follow'], item['visit'],
+                item['crawl_time']
+                ))
+        # 更新价格
+        cursor.execute(self.insert_price_sql,
+            (item['hid'], 
+                item['price'], item['unit_price'],
+                item['crawl_time']
+                ))
 
     def do_insert(self,cursor,item):
         #具体插入数据
@@ -143,24 +182,6 @@ class MysqlTwistedPipline(object):
             ON DUPLICATE KEY UPDATE
             crawl_time=VALUES(crawl_time)
             '''
-        insert_price_sql = '''
-            insert into lj_house_price
-            ( id, 
-            price, unit_price,
-            crawl_time) 
-            VALUES (%s,
-            %s,%s,
-            %s)
-            '''
-        insert_follow_sql = '''
-            insert into lj_house_follow
-            ( id, 
-            follow, visit,
-            crawl_time) 
-            VALUES (%s,
-            %s,%s,
-            %s)
-            '''
 
         cursor.execute(insert_house_sql,
                        (item['hid'], 
@@ -172,13 +193,13 @@ class MysqlTwistedPipline(object):
                         item['tags'], item['url'],
                         item['crawl_time']
                     ))
-        cursor.execute(insert_price_sql,
-                       (item['hid'], 
-                        item['price'], item['unit_price'],
-                        item['crawl_time']
-                    ))
-        cursor.execute(insert_follow_sql,
-                       (item['hid'], 
-                        item['follow'], item['visit'],
-                        item['crawl_time']
-                    ))
+        cursor.execute(self.insert_follow_sql,
+            (item['hid'], 
+                item['follow'], item['visit'],
+                item['crawl_time']
+                ))
+        cursor.execute(self.insert_price_sql,
+            (item['hid'], 
+                item['price'], item['unit_price'],
+                item['crawl_time']
+                ))

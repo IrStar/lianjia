@@ -69,7 +69,7 @@ DOWNLOADER_MIDDLEWARES = {
 ITEM_PIPELINES = {
     'lianjia.pipelines.LianjiaPipeline' : 200,
 #    'lianjia.pipelines.JsonWithEncodingPipeline': 300,
-    'lianjia.pipelines.MysqlTwistedPipline': 200,
+    'lianjia.pipelines.MysqlTwistedPipline': 300,
 }
 
 # Enable and configure the AutoThrottle extension (disabled by default)
