@@ -10,19 +10,35 @@ import pymysql
 from twisted.enterprise import adbapi
 
 class LianjiaPipeline(object):
+
+    def open_spider(self, spider):
+
+        spider.house_ids = ['101101493098', 
+#        '101102431983', 
+#        '101102989344',
+        '101102291309',
+        '101102977607', '101103132770', '101101596120', '101102760470', '101102881080',
+        '101102855707', 
+        '101102490792']
+
     def process_item(self, item, spider):
+
+        if item.get('layer') is None:
+            item['layer'] = '暂无数据'
+        if item.get('structure') is None:
+            item['structure'] = '试试看吧'
+
         return item
 
 class JsonWithEncodingPipeline(object):
-    def __init__(self):
+
+    def open_spider(self, spider):
         self.file = codecs.open("lianjia.json",'w',encoding="utf-8")
 
-    def process_item(self, item, spider):
+    def close_spider(self,spider):
+        self.file.close()
 
-        if hasattr(item,'layer') is False:
-            item['layer'] = '暂无数据'
-        if hasattr(item,'structure') is False:
-            item['structure'] = '暂无数据'
+    def process_item(self, item, spider):
 
         url = json.dumps(str(item['url']),ensure_ascii=False) + "\n"
         xiaoqu = json.dumps("小区：" + str(item['xiaoqu']),ensure_ascii=False) + "\n"
@@ -48,12 +64,10 @@ class JsonWithEncodingPipeline(object):
         unitPrice = json.dumps("单价：" + str(item['unit_price']) + " 元/平米",ensure_ascii=False) + "\n"
         line = guanzhu + daikan + tag + price + unitPrice
         self.file.write(line)
-        
+
         self.file.write("\n")
         return item
 
-    def spider_closed(self,spider):
-        self.file.close()
 
 class MysqlTwistedPipline(object):
     '''

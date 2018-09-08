@@ -17,11 +17,14 @@ class LianjiaSpider(scrapy.Spider):
     name = "lianjia"
     allowed_domains = ["bj.lianjia.com", "lf.lianjia.com"]
     start_urls = [
-            "http://bj.lianjia.com/ershoufang/hy1bt1y2ea1000ep1000/", # 集体供暖，塔楼，10年以内，1000平以内，1000w以内
-            "http://bj.lianjia.com/ershoufang/hy1bt2y2ea1000ep1000/", # 同上，板楼
-            "http://bj.lianjia.com/ershoufang/hy1bt3y2ea1000ep1000/", # 同上，板塔结合
-            "http://bj.lianjia.com/ershoufang/hy2y2ea1000ep1000/"     # 同上，自供暖
+#            "http://bj.lianjia.com/ershoufang/hy1bt1y2ea1000ep1000/", # 集体供暖，塔楼，10年以内，1000平以内，1000w以内
+#            "http://bj.lianjia.com/ershoufang/hy1bt2y2ea1000ep1000/", # 同上，板楼
+#            "http://bj.lianjia.com/ershoufang/hy1bt3y2ea1000ep1000/", # 同上，板塔结合
+#            "http://bj.lianjia.com/ershoufang/hy2y2ea1000ep1000/"     # 同上，自供暖
+            "https://bj.lianjia.com/ershoufang/hy2y2ba250ea1000bp900ep1000/"
             ]
+
+    house_ids = []
 
     def parse(self, response):
         global count_houses
@@ -43,6 +46,9 @@ class LianjiaSpider(scrapy.Spider):
             houseItem['url'] = url.a['href']
 
             houseItem['title'] = url.a.string
+
+            if houseItem['hid'] in self.house_ids:
+                continue
 
             # 关注与带看
             followInfo = house.find('div', 'followInfo')
@@ -130,7 +136,6 @@ class LianjiaSpider(scrapy.Spider):
                 houseItem['zhuangxiu'] = li.get_text()[4:]
             elif li.span.text == '供暖方式':
                 houseItem['heating'] = li.get_text()[4:]
-
 
         # 房屋区域信息
         aroundInfo = soup.find('div', 'aroundInfo')
