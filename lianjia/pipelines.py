@@ -56,7 +56,7 @@ class LianjiaPipeline(object):
 class JsonWithEncodingPipeline(object):
 
     def open_spider(self, spider):
-        self.file = codecs.open("lianjia.json",'w',encoding="utf-8")
+        self.file = codecs.open("./data/lianjia.json",'w',encoding="utf-8")
 
     def close_spider(self,spider):
         self.file.close()

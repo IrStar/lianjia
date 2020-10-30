@@ -24,8 +24,6 @@ class LianjiaSpider(scrapy.Spider):
             "https://bj.lianjia.com/ershoufang/hy2y2ba250ea1000bp900ep1000/"
             ]
 
-    house_ids = []
-
     def parse(self, response):
         global count_houses
 
@@ -87,16 +85,13 @@ class LianjiaSpider(scrapy.Spider):
                 totalPage = int(pi[pi.find('totalPage')+11:])
             elif pi.find('curPage') > 0:
                 curPage = int(pi[pi.find('curPage')+9:])
-
         print("CurPage: {}, TotalPage: {}".format(curPage, totalPage))
+
         # 未到达最后一页，则翻页
         if curPage < totalPage and curPage < 100:
             page_url = page_box['page-url']
             next_page_url = response.urljoin(page_url.replace('{page}',str(curPage+1)))
             print("Next page URL: {}".format(next_page_url))
-#        next_page = pages_url.contents[-1]
-#        if next_page is not None and pages < 2:
-#            next_page_url = response.urljoin(next_page['href'])
             yield scrapy.Request(url=next_page_url, callback=self.parse)
 
 
